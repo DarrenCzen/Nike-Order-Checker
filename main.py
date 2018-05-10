@@ -8,7 +8,7 @@ RESULTS = 'orders.txt' # Text file where orders are located in email:ordernumber
 DELAY = 0 # Delay in seconds between checking orders
 PROXY_FILE = 'proxies.txt' # Text file where proxies are located in ip:host or ip:host:user:pass format
 DISPLAY = False # Whether or not you want the full output saved to RESULTS to be displayed in terminal as well
-REGION =  'en-us' # Full list of regions can be found here
+REGION =  'en-us' # Full list of regions can be found in regions.txt
 
 WIDTH = 30 # Don't touch
 
