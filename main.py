@@ -8,6 +8,7 @@ RESULTS = 'orders.txt' # Text file where orders are located in email:ordernumber
 DELAY = 0 # Delay in seconds between checking orders
 PROXY_FILE = 'proxies.txt' # Text file where proxies are located in ip:host or ip:host:user:pass format
 DISPLAY = False # Whether or not you want the full output saved to RESULTS to be displayed in terminal as well
+REGION =  'en-us' # Full list of regions can be found here
 
 WIDTH = 30 # Don't touch
 
@@ -79,7 +80,7 @@ for i in range(0,len(info)):
 	headers = {
 	    'origin': 'https://secure-store.nike.com',
 	    'accept-encoding': 'gzip, deflate, br',
-	    'accept-language': 'en-US,en;q=0.9',
+	    'accept-language': '{}-{},en;q=0.9'.format(REGION.split('-')[0].lower(), REGION.split('-')[1].upper()),
 	    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
 	    'content-type': 'application/x-www-form-urlencoded',
 	    'accept': '*/*',
@@ -89,8 +90,8 @@ for i in range(0,len(info)):
 	}
 	data = [
 	  ('action', 'getAnonymousOrderDetails'),
-	  ('lang_locale', 'en_US'),
-	  ('country', 'US'),
+	  ('lang_locale', '{}_{}'.format(REGION.split('-')[0].lower(), REGION.split('-')[1].upper())),
+	  ('country', '{}'.format(REGION.split('-')[1].upper())),
 	  ('endpoint', 'getAnonymousOrderDetails'),
 	  ('orderId', order_number),
 	  ('email', email),
