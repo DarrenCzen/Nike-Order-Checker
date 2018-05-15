@@ -9,8 +9,6 @@ DELAY = 0 # Delay in seconds between checking orders
 PROXY_FILE = 'proxies.txt' # Text file where proxies are located in ip:host or ip:host:user:pass format
 DISPLAY = False # Whether or not you want the full output saved to RESULTS to be displayed in terminal as well
 REGION =  'en-us' # Full list of regions can be found in regions.txt
-REMOVE_CANCELLED = False # Choose whether or not you want cancelled orders removed from RESULTS
-DELIMITER = ' | ' # Choose how values are separated in RESULTS
 
 WIDTH = 30 # Don't touch
 
@@ -49,17 +47,11 @@ def set_proxy(PROXIES):
 		  'https': None,
 		}
 	return proxies
-
-def smart_split(item):
-	if ':' in item:
-		return item.split(':')
-	else:
-		return item.split(DELIMITER)
-
+	
 header()
 with open(RESULTS, 'r') as myfile:
 	text = myfile.read()
-info = list(set([item for item in text.split('\n') if item != '' and len([field for field in smart_split(item) if item != '']) > 1]))
+info = [item for item in text.split('\n') if item != '' and len([field for field in item.split(':') if item != '']) > 1]
 statuses = []
 if len(info) > 0:
 	print center('Gathering order status for {} orders...\n'.format(str(len(info))), ' ')
@@ -77,14 +69,14 @@ if PROXIES == []:
 	proxies = set_proxy(PROXIES)
 for i in range(0,len(info)):
 	header()
-	line = info[i]
-	order = smart_split(line)
-	email = order[0]
-	order_number = order[1]
 	print '[{}/{}] Gathering order status...'.format(str(i + 1), str(len(info)))
+	line = info[i]
 	if PROXIES != []:
 		proxies = set_proxy(PROXIES)
 	session = requests.Session()
+	order = line.split(':')
+	email = order[0]
+	order_number = order[1]
 	headers = {
 	    'origin': 'https://secure-store.nike.com',
 	    'accept-encoding': 'gzip, deflate, br',
@@ -107,68 +99,52 @@ for i in range(0,len(info)):
 	]
 	response = session.post('https://secure-store.nike.com/nikestore/html/services/orders/orderDetails', headers=headers, data=data, proxies=proxies)
 	try:
-		content = json.loads(response.content)
+		status = json.loads(response.content)['data']['order']['status']
 	except:
 		status = 'Error getting order status'
-	try:
-		status = content['data']['order']['shippingGroups'][0]['status']
-	except:
-		try:
-			status = content['data']['order']['status']
-		except:
-			status = 'Error getting order status'
-	try:
-		name = '{} - {}'.format(content['data']['order']['shippingGroups'][0]['commerceItems'][0]['product']['name'], content['data']['order']['shippingGroups'][0]['commerceItems'][0]['displaySize'])
-	except:
-		name = '' 
 	tracking_number = ''
 	expected_delivery = ''
 	if status == 'Shipped':
 		try:
-			status = content['data']['order']['shippingGroups'][0]['status']
+			status = json.loads(response.content)['data']['order']['shippingGroups'][0]['status']
 			if status != 'Delivered':
-				try:
-					tracking_number = content['data']['order']['shippingGroups'][0]['trackingNumber']
-				except:
-					pass
-				try:
-					expected_delivery = content['data']['order']['shippingGroups'][0]['commerceItems'][0]['expectedDeliveryDate']
-				except:
-					pass
+				for item in json.loads(response.content)['data']['order']['shippingGroups']:
+					try:
+						tracking_number = item['trackingNumber']
+					except:
+						pass
+				for field in item['commerceItems']:
+					try:
+						expected_delivery = field['expectedDeliveryDate']
+					except:
+						pass
 		except:
 			tracking_number = 'Error getting tracking number'
 	statuses.append(status)
-	if name != '':
-		if len(order) > 2:
-			order[2] = name
-			final = ' | '.join(order[:3])
-		else:
-			order.append(name)
-			final = ' | '.join(order[:3])
-	if len(order) > 3:
-		order[3] = status
-		final = ' | '.join(order[:4])
+	if len(order) > 2:
+		order[2] = status
+		final = ':'.join(order[:3])
 	else:
 		order.append(status)
-		final = ' | '.join(order[:4])
+		final = ':'.join(order[:3])
 	if tracking_number != '':
-		if len(order) > 4:
-			order[4] = tracking_number
-			final = ' | '.join(order[:5])
+		if len(order) > 3:
+			order[3] = tracking_number
+			final = ':'.join(order[:4])
 		else:
 			order.append(tracking_number)
-			final = ' | '.join(order[:5])
+			final = ':'.join(order[:4])
 	if expected_delivery != '':
-		if len(order) > 5:
-			order[5] = expected_delivery
-			final = ' | '.join(order[:6])
+		if len(order) > 4:
+			order[4] = expected_delivery
+			final = ':'.join(order[:5])
 		else:
 			order.append(expected_delivery)
-			final = ' | '.join(order[:6])
+			final = ':'.join(order[:5])
 	with open(RESULTS, 'r') as myfile:
 		text = myfile.read()
 	with open(RESULTS, 'w') as myfile:
-			myfile.write(text.replace(line, final))
+		myfile.write(text.replace(line, final))
 	if DELAY > 0 and i != len(info) - 1:
 		print 'Order {}: {}\n'.format(order_number, status)
 		smart_sleep(DELAY)
@@ -176,27 +152,18 @@ if len(info) > 0:
 	header()
 	with open(RESULTS, 'r') as myfile:
 		text = myfile.read()
-	info = [item for item in text.split('\n') if item != '' and len([field for field in smart_split(item) if item != '']) > 1]
-	display_text = ''
-	result_text = ''
-	sorted_list = sorted(list(set(statuses)))
-	for category in sorted_list:
-		display_text += category + '\n'
+	info = [item for item in text.split('\n') if item != '' and len([field for field in item.split(':') if item != '']) > 1]
+	sorted_text = ''
+	for category in sorted(list(set(statuses))):
+		sorted_text += category + '\n\n'
 		for item in info:
-			if smart_split(item)[3] == category:
-				display_text += '\n' + item
-		display_text += '\n\n'
-		if category != 'Cancelled' or not REMOVE_CANCELLED:
-			result_text += category + '\n'
-			for item in info:
-				if smart_split(item)[3] == category:
-					result_text += '\n' + item
-			if sorted_list.index(category) != len(sorted_list) - 1:
-				result_text += '\n\n'
+			if item.split(':')[2] == category:
+				sorted_text += item + '\n'
+		sorted_text += '\n'
 	with open(RESULTS, 'w') as myfile:
-		myfile.write(result_text)
+		myfile.write(sorted_text)
 	if DISPLAY:
-		print display_text
+		print sorted_text
 	print center('Output', '~')
 	print ''
 	for category in sorted(list(set(statuses))):
