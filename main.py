@@ -121,8 +121,6 @@ for i in range(0,len(info)):
 		name = '{} - {}'.format(content['data']['order']['shippingGroups'][0]['commerceItems'][0]['product']['name'], content['data']['order']['shippingGroups'][0]['commerceItems'][0]['displaySize'])
 	except:
 		name = '' 
-	tracking_number = ''
-	expected_delivery = ''
 	if status == 'Shipped':
 		try:
 			status = content['data']['order']['shippingGroups'][0]['status']
@@ -130,13 +128,45 @@ for i in range(0,len(info)):
 				try:
 					tracking_number = content['data']['order']['shippingGroups'][0]['trackingNumber']
 				except:
-					pass
+					tracking_number = ''
 				try:
 					expected_delivery = content['data']['order']['shippingGroups'][0]['commerceItems'][0]['expectedDeliveryDate']
 				except:
-					pass
+					expected_delivery = ''
 		except:
 			tracking_number = 'Error getting tracking number'
+			expected_delivery = ''
+	else:
+		tracking_number = ''
+		expected_delivery = ''
+	try:
+		first_name = content['data']['order']['shippingGroups'][0]['shippingAddress']['firstName']
+	except:
+		first_name = ''
+	try:
+		last_name = content['data']['order']['shippingGroups'][0]['shippingAddress']['lastName']
+	except:
+		last_name = ''
+	try:
+		address1 = content['data']['order']['shippingGroups'][0]['shippingAddress']['address1']
+	except:
+		address1 = ''
+	try:
+		address2 = content['data']['order']['shippingGroups'][0]['shippingAddress']['address2']
+	except:
+		address2 = ''
+	try:
+		city = content['data']['order']['shippingGroups'][0]['shippingAddress']['city']
+	except:
+		city = ''
+	try:
+		state = content['data']['order']['shippingGroups'][0]['shippingAddress']['state']
+	except:
+		state = ''
+	try:
+		zip_code = content['data']['order']['shippingGroups'][0]['shippingAddress']['postalCode']
+	except:
+		zip_code = ''
 	statuses.append(status)
 	if name != '':
 		if len(order) > 2:
@@ -145,26 +175,37 @@ for i in range(0,len(info)):
 		else:
 			order.append(name)
 			final = DELIMITER.join(order[:3])
-	if len(order) > 3:
-		order[3] = status
-		final = DELIMITER.join(order[:4])
+	if first_name != '' and last_name != '' and address1 != '' and address2 != '' and city != '' and state != '' and zip_code != '':
+		if address2 != None:
+			address = '{} {} {} {} {}, {} {}'.format(first_name, last_name, address1, address2, city, state, zip_code)
+		else:
+			address = '{} {} {} {}, {} {}'.format(first_name, last_name, address1, city, state, zip_code)
+		if len(order) > 3:
+			order[3] = address
+			final = DELIMITER.join(order[:4])
+		else:
+			order.append(address)
+			final = DELIMITER.join(order[:4])	
+	if len(order) > 4:
+		order[4] = status
+		final = DELIMITER.join(order[:5])
 	else:
 		order.append(status)
-		final = DELIMITER.join(order[:4])
+		final = DELIMITER.join(order[:5])
 	if tracking_number != '':
-		if len(order) > 4:
-			order[4] = tracking_number
-			final = DELIMITER.join(order[:5])
+		if len(order) > 5:
+			order[5] = tracking_number
+			final = DELIMITER.join(order[:6])
 		else:
 			order.append(tracking_number)
-			final = DELIMITER.join(order[:5])
-	if expected_delivery != '':
-		if len(order) > 5:
-			order[5] = expected_delivery
 			final = DELIMITER.join(order[:6])
+	if expected_delivery != '':
+		if len(order) > 6:
+			order[6] = expected_delivery
+			final = DELIMITER.join(order[:7])
 		else:
 			order.append(expected_delivery)
-			final = DELIMITER.join(order[:6])
+			final = DELIMITER.join(order[:7])
 	with open(RESULTS, 'r') as myfile:
 		text = myfile.read()
 	with open(RESULTS, 'w') as myfile:
@@ -183,19 +224,23 @@ if len(info) > 0:
 	for category in sorted_list:
 		display_text += category + '\n'
 		for item in info:
-			if smart_split(item)[3] == category:
+			if smart_split(item)[4] == category:
 				display_text += '\n' + item
 		display_text += '\n\n'
 		if category != 'Cancelled' or not REMOVE_CANCELLED:
 			result_text += category + '\n'
 			for item in info:
-				if smart_split(item)[3] == category:
+				if smart_split(item)[4] == category:
 					result_text += '\n' + item
 			if sorted_list.index(category) != len(sorted_list) - 1:
 				result_text += '\n\n'
+	for category in sorted_list:
+		result_text = result_text.replace(DELIMITER + category, '')
 	with open(RESULTS, 'w') as myfile:
 		myfile.write(result_text)
 	if DISPLAY:
+		for category in sorted_list:
+			display_text = display_text.replace(DELIMITER + category, '')
 		print display_text
 	print center('Output', '~')
 	print ''
