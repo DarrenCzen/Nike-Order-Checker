@@ -14,5 +14,6 @@ Easier way to check multiple Nike.com orders.
 
 ### TODO
 
+- [ ] Support for Email:Password format
 - [ ] Add more accurate tracking for shipped orders
 - [ ] Idk, suggest stuff to me on Twitter @DefNotAvg
