@@ -141,30 +141,30 @@ for i in range(0,len(info)):
 	if name != '':
 		if len(order) > 2:
 			order[2] = name
-			final = ' | '.join(order[:3])
+			final = DELIMITER.join(order[:3])
 		else:
 			order.append(name)
-			final = ' | '.join(order[:3])
+			final = DELIMITER.join(order[:3])
 	if len(order) > 3:
 		order[3] = status
-		final = ' | '.join(order[:4])
+		final = DELIMITER.join(order[:4])
 	else:
 		order.append(status)
-		final = ' | '.join(order[:4])
+		final = DELIMITER.join(order[:4])
 	if tracking_number != '':
 		if len(order) > 4:
 			order[4] = tracking_number
-			final = ' | '.join(order[:5])
+			final = DELIMITER.join(order[:5])
 		else:
 			order.append(tracking_number)
-			final = ' | '.join(order[:5])
+			final = DELIMITER.join(order[:5])
 	if expected_delivery != '':
 		if len(order) > 5:
 			order[5] = expected_delivery
-			final = ' | '.join(order[:6])
+			final = DELIMITER.join(order[:6])
 		else:
 			order.append(expected_delivery)
-			final = ' | '.join(order[:6])
+			final = DELIMITER.join(order[:6])
 	with open(RESULTS, 'r') as myfile:
 		text = myfile.read()
 	with open(RESULTS, 'w') as myfile:
