@@ -105,8 +105,8 @@ for i in range(0,len(info)):
 	  ('email', email),
 	  ('deviceType', 'desktop'),
 	]
-	response = session.post('https://secure-store.nike.com/nikestore/html/services/orders/orderDetails', headers=headers, data=data, proxies=proxies)
 	try:
+		response = session.post('https://secure-store.nike.com/nikestore/html/services/orders/orderDetails', headers=headers, data=data, proxies=proxies)
 		content = json.loads(response.content)
 	except:
 		status = 'Error getting order status'
